@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Project 1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f9fafb;
+      --card: #fff;
+      --text: #333;
+      --text-strong: #222;
+      --muted: #444;
+      --border: #eee;
+      --accent: #4a90e2;
+      --accent-hover: #357ab8;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      color: var(--text-strong);
+      text-align: center;
+    }
+
+    h2 {
+      margin: 40px 0 16px;
+      font-size: 20px;
+      color: var(--text-strong);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .desc {
+      margin: 12px 0 24px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    /* Responsive image grids */
+    .images {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 8px;
+    }
+
+    /* Section-specific grid templates */
+    .images.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .images.many {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    @media (max-width: 900px) {
+      .images.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .images.ten { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 20px; }
+      .images.three { grid-template-columns: 1fr; }
+      .images.ten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    figure {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    figure:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+
+    figcaption {
+      width: 100%;
+      padding: 10px 12px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .back {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 10px 18px;
+      text-decoration: none;
+      color: #fff;
+      background: var(--accent);
+      border-radius: 6px;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .back:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Project 1</h1>
+
+    <!-- Section 1 -->
+    <section class="section" aria-labelledby="s1-title">
+      <h2 id="s1-title">Exhaustive Naive Alignment Algorithm</h2>
+      <div class="desc">
+        <p>Firstly, for jpg images which had poor image quality, I performed an exhaustive algorithm, which ran a small square (15x15) across the entire image. I tested both Euclidean distance and NCC as score metrics, but NCC seemed to yield more accurate results; the reason for this is because NCC performs better even when there are changes in contrast or color. Below are the three jpg low qualities, and the exhaustive search seems to work well. 
+        </p>
+      </div>
+      <div class="images three">
+        <figure>
+          <img src="./out/cathedral.png" alt="Cathedral" />
+          <figcaption>
+            <h3>Cathedral</h3>
+            <p>
+              G displacement (y, x): (-5, -2)
+            </p>
+            <p> 
+              R displacement (y, x): (-12, -3)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/monastery.png" alt="Monastery" />
+          <figcaption>
+            <h3>Monastery</h3>
+            <p>
+              G displacement (y, x): (3, -2)
+            </p>
+            <p> 
+              R displacement (y, x): (-3, -2)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/tobolsk.png" alt="Tobolsk" />
+          <figcaption>
+            <h3>Tobolsk</h3>
+            <p>
+              G displacement (y, x): (-3, -2)
+            </p>
+            <p> 
+              R displacement (y, x): (-6, -3)
+            </p>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section class="section" aria-labelledby="s2-title">
+      <h2 id="s2-title">Architectural perspective compressions</h2>
+      <div class="desc">
+        <p>For the larger TIF images, the exhaustive search took a very long time to complete, so I performed a pyramid search on these images in order to speed up the process. In this, I shrunk the resolution of the image by a factor of 0.5 multiple times and then performed the same algorithm as above. Additionally, I also removed the edges of the images, scaled by how large they were, so that the algorithm would not get confused by the edges of the images which were not aligned. Below are the tif images. Note: my algorithm worked fine for every image except Emir, which was slightly misaligned; for Emir, I had to increase the amount of pyramid iterations. The time taken was only slightly longer (~25 seconds compared to ~20 seconds for the others), but it resulted in a much clearer image. </p>
+      </div>
+      <div class="images many">
+        <figure>
+          <img src="./out/church.png" alt="Church" />
+          <figcaption>
+            <h3>Church</h3>
+            <p>
+              G displacement (y, x): (25, 2)
+            </p>
+            <p> 
+              R displacement (y, x): (58, -6)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/emir.png" alt="Emir" />
+          <figcaption>
+            <h3>Emir</h3>
+            <p>
+              G displacement (y, x): (35, 9)
+            </p>
+            <p> 
+              R displacement (y, x): (94, 21)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/harvesters.png" alt="Harvesters" />
+          <figcaption>
+            <h3>Harvesters</h3>
+            <p>
+              G displacement (y, x): (60, 16)
+            </p>
+            <p> 
+              R displacement (y, x): (124, 14)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/icon.png" alt="Icon" />
+          <figcaption>
+            <h3>Icon</h3>
+            <p>
+              G displacement (y, x): (40, 17)
+            </p>
+            <p> 
+              R displacement (y, x): (89, 23)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/italil.png" alt="Italil" />
+          <figcaption>
+            <h3>Italil</h3>
+            <p>
+              G displacement (y, x): (38, 21)
+            </p>
+            <p> 
+              R displacement (y, x): (77, 35)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/lastochikino.png" alt="Lastochikino" />
+          <figcaption>
+            <h3>Lastochikino</h3>
+            <p>
+              G displacement (y, x): (-3, -2)
+            </p>
+            <p> 
+              R displacement (y, x): (76, -9)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/lugano.png" alt="Lugano" />
+          <figcaption>
+            <h3>Lugano</h3>
+            <p>
+              G displacement (y, x): (41, -17)
+            </p>
+            <p> 
+              R displacement (y, x): (92, -28)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/melons.png" alt="Melons" />
+          <figcaption>
+            <h3>Melons</h3>
+            <p>
+              G displacement (y, x): (82, 9)
+            </p>
+            <p> 
+              R displacement (y, x): (178, 12)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/self_portrait.png" alt="Self_portrait" />
+          <figcaption>
+            <h3>Self_portrait</h3>
+            <p>
+              G displacement (y, x): (78, 28)
+            </p>
+            <p> 
+              R displacement (y, x): (176, 36)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/siren.png" alt="Siren" />
+          <figcaption>
+            <h3>Siren</h3>
+            <p>
+              G displacement (y, x): (49, -7)
+            </p>
+            <p> 
+              R displacement (y, x): (95, -25)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/three_generations.png" alt="Three_generations" />
+          <figcaption>
+            <h3>Three_generations</h3>
+            <p>
+              G displacement (y, x): (54, 13)
+            </p>
+            <p> 
+              R displacement (y, x): (111, 10)
+            </p>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section class="section" aria-labelledby="s1-title">
+      <h2 id="s1-title">Additional images</h2>
+      <div class="desc">
+        <p>I also ran my algorithm on 2 additional images from the collection. 
+        </p>
+      </div>
+      <div class="images three">
+        <figure>
+          <img src="./out/desert.png" alt="Desert" />
+          <figcaption>
+            <h3>Desert</h3>
+            <p>
+              G displacement (y, x): (32, 4)
+            </p>
+            <p> 
+              R displacement (y, x): (80, 7)
+            </p>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/hillside.png" alt="Hillside" />
+          <figcaption>
+            <h3>Hillside</h3>
+            <p>
+              G displacement (y, x): (32, 0)
+            </p>
+            <p> 
+              R displacement (y, x): (134, -2)
+            </p>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+    
+
+    <a

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Project 2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f9fafb;
+      --card: #fff;
+      --text: #333;
+      --text-strong: #222;
+      --muted: #444;
+      --border: #eee;
+      --accent: #4a90e2;
+      --accent-hover: #357ab8;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      color: var(--text-strong);
+      text-align: center;
+    }
+
+    h2 {
+      margin: 40px 0 16px;
+      font-size: 20px;
+      color: var(--text-strong);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .desc {
+      margin: 12px 0 24px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    /* Responsive image grids */
+    .images {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 8px;
+    }
+
+    /* Section-specific grid templates */
+    .images.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .images.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .images.many {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    @media (max-width: 900px) {
+      .images.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .images.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .images.ten { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 20px; }
+      .images.two { grid-template-columns: 1fr; }
+      .images.three { grid-template-columns: 1fr; }
+
+      .images.ten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    figure {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    figure:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+      object-fit: cover;
+    }
+
+    figcaption {
+      width: 100%;
+      padding: 10px 12px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .back {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 10px 18px;
+      text-decoration: none;
+      color: #fff;
+      background: var(--accent);
+      border-radius: 6px;
+    }
+
+    .back:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Project 2</h1>
+
+    <!-- Section 1 -->
+    <section class="section" aria-labelledby="s1-title">
+      <h2 id="s1-title">Part 1.1: Convolutions From Scratch</h2> 
+      <div class="desc">
+        <p>For my convolution, I implemented it using both 4 for loops and 2 for loops. 2 for loops was a bit faster, but not as fast as the built-in function scipy.signal.convolve2d. I think is because even though numpy is also implemented in C, the scipy built-in function is likely optimized for this particular task of convolving. Or maybe there's a faster way to do a convolution.   
+        </p>
+      </div>
+      <pre><code class="language-python">
+        def conv(img_path, k):
+            img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+            cv2.imwrite("out/img1original.jpg", img)
+            iheight, iwidth = img.shape
+            kheight, kwidth = k.shape
+            final = np.zeros_like(img)
+            padding = np.pad(img, ((kheight//2, kheight//2), (kwidth//2, kwidth//2)))
+            for a in range(iheight):
+                for b in range(iwidth):
+                    conv_val = 0
+                    for i in range(kheight):
+                        for j in range(kwidth):
+                            conv_val += padding[a+i, b+j] * k[i, j]
+                    final[a, b] = conv_val
+
+            return final
+
+        def conv_2loops(img_path, k):
+            img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+            cv2.imwrite("out/img1original.jpg", img)
+            iheight, iwidth = img.shape
+            kheight, kwidth = k.shape
+            final = np.zeros_like(img)
+            padding = np.pad(img, ((kheight//2, kheight//2), (kwidth//2, kwidth//2)))
+            for a in range(iheight):
+                for b in range(iwidth):
+                    temp = padding[a:a+kheight, b:b+kwidth]
+                    final[a, b] = np.sum(k*temp)
+            return final
+
+        </code></pre>
+      <div class="images two">
+        <figure>
+          <img src="./out/img1original.jpg" alt="img1" />
+          <figcaption>
+            <h3>Selfie (grayscale)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/img1conv.jpg" alt="img1conv" />
+          <figcaption>
+            <h3>Selfie (convolution with 9x9 box filter)</h3>
+            
+          </figcaption>
+        </figure>
+
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+    <div class="desc">
+    <p>As to be expected, the image with the convolution is slightly blurrier than the original image. This makes sense, since we are essentially taking a local average of all the pixels. When performing a convolution with the finite difference operators, we see all the pixel intensity changes in the x and y dimensions, as seen below. 
+    </p>
+    </div>
+          <div class="images two">
+        <figure>
+          <img src="./out/img1dx.jpg" alt="dx" />
+          <figcaption>
+            <h3>Convolution with D<sub>x</sub> difference operator</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/img1dy.jpg" alt="dy" />
+          <figcaption>
+            <h3>Convolution with D<sub>y</sub> difference operator</h3>
+            
+          </figcaption>
+        </figure>
+
+          </figcaption>
+        </figure>
+      </div>
+
+    <!-- Section 2 -->
+    <section class="section" aria-labelledby="s2-title">
+      <h2 id="s2-title">Part 1.2: Finite Difference Operator</h2>
+      <div class="desc">
+        <p>To explore the finite difference operator, I took the partial derivative in x and y of the cameraman image by convolving the image with the finite difference operators, as seen below. Then I took the 2-norm of D<sub>x</sub> and D<sub>y</sub> to get the gradient magnitude image. Following this, I binarized the gradient magnitude image using the cv2.threshold function, and then picked a threshold which seemed to work best. In my case, using a threshold value of 60 seemed to work well, as it included almost all of the outlines of the cameraman while filtering out most of the background. I also noticed that it wasn't possible to achieve a perfect edge detector, since if the threshold value is high enough to include the boundaries on the cameraman, some of the edges from the background are forced to be included as well.  </p>
+      </div>
+      <div class="images three">
+        <figure>
+          <img src="./data/cameraman.jpg" alt="cameraman" />
+          <figcaption>
+            <h3>Cameraman (original)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/cameramandx.jpg" alt="cameramandx" />
+          <figcaption>
+            <h3>Cameraman convolution with D<sub>x</sub> difference operator</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/cameramandy.jpg" alt="cameramandy" />
+          <figcaption>
+            <h3>Cameraman convolution with D<sub>y</sub> difference operator</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/cameramangrad.jpg" alt="cameramangrad" />
+          <figcaption>
+            <h3>Cameraman gradient image</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/cameramanedgemapbinarization.jpg" alt="cameramanedgemapbinarization" />
+          <figcaption>
+            <h3>Cameraman gradient image with binarization</h3>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+    <section class="section" aria-labelledby="s3-title">
+      <h2 id="s3-title">Part 1.3: DoG Filter</h2>
+      <div class="desc">
+        <p>For this section, I experimented with smooothing the image first before getting the edge detector. I convolved the original image with a Gaussian filter to create a blurred image, and then I did another convolution with the finite difference operators, as seen below. The result is roughly the same as before, but it definitely looks less noisy, especially on the camera pole and on the grass</p>
+      </div>
+      <div class="images three">
+        <figure>
+          <img src="./data/cameraman.jpg" alt="cameraman" />
+          <figcaption>
+            <h3>Original Cameraman</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/cameramangaussian.jpg" alt="cameramangaussian" />
+          <figcaption>
+            <h3>Cameraman (Gaussian-smoothed)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/derivativex.jpg" alt="dx" />
+          <figcaption>
+            <h3>DoG X filter</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/derivativey.jpg" alt="dy" />
+          <figcaption>
+            <h3>DoG Y filter</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/camera_derivative_gaussianx.jpg" alt="cameramangaussianx" />
+          <figcaption>
+            <h3>Cameraman with DoG X filter</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/camera_derivative_gaussiany.jpg" alt="cameramangaussiany" />
+          <figcaption>
+            <h3>Cameraman with DoG Y filter</h3>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+     <!-- Section 3 -->
+    <section class="section" aria-labelledby="s3-title">
+      <h2 id="s3-title">Part 2.1: Image sharpening</h2>
+      <div class="desc">
+        <p>To sharpen the following image, I first used a low pass filter to find all the low frequencies in the image. To do this, I performed a convolution of the image with a 5x5 kernel of 1s. The, to get the high frequencies in the image, I just subtracted the low frequencies from the original image using cv2.subtract. Lastly, I then added the high frequencies in the image back to the original image to make it appear sharper. A frequency multiplier of 1 worked well for me, as seen below. To combine all these steps into a single convolution operation, I started with the equation I<sub>low</sub> = I * b, where b is the blurring kernel. Then, we plug this into the formula for the image I<sub>sharp</sub> = I + a*I<sub>high</sub>, which gives the equation I<sub>sharp</sub> = I + a*(I - I<sub>low</sub>). Next, we can replace the I<sub>low</sub> with I * b and then expand this formula to I<sub>sharp</sub> = (1 + a)*I - a(I * b)</sub>. Lastly, to rewrite the image as a convolution, we can multiply all this by an impulse kernel to transform the formula into a convolution. Thus, I<sub>sharp</sub> = (1 + a)*I*k - a(I * b). Lastly, we can factor out the I, giving us I<sub>sharp</sub> = I * ((1 + a)k - ab). 
+      </div>
+      <div class="images many">
+        <figure>
+          <img src="./out/taj_bw.jpg" alt="originaltaj" />
+          <figcaption>
+            <h3>Original Taj Mahal</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/high_freq_taj.jpg" alt="highfreqtaj" />
+          <figcaption>
+            <h3>High Frequency Taj Mahal (a = 0.8)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/sharpened_taj.jpg" alt="sharpenedtaj" />
+          <figcaption>
+            <h3>Sharpened Taj Mahal (a = 0.8)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/high_freq_taj1.jpg" alt="highfreqtaj1" />
+          <figcaption>
+            <h3>High Frequency Taj Mahal (a = 2)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/sharpened_taj.jpg" alt="sharpenedtaj" />
+          <figcaption>
+            <h3>Sharpened Taj Mahal (a = 2)</h3>
+          </figcaption>
+        </figure>
+                <figure>
+          <img src="./out/high_freq_taj2.jpg" alt="highfreqtaj1" />
+          <figcaption>
+            <h3>High Frequency Taj Mahal (a = 4)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/sharpened_taj2.jpg" alt="sharpenedtaj1" />
+          <figcaption>
+            <h3>Sharpened Taj Mahal (a = 4)</h3>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="s3-title">
+      <div class="desc">
+        <p>I repeated the same process but for an image of my choice which I performed blurring on. In this case, the high frequency image appears completely black because all of the fine detail is lost in the Gaussian blurring, and so its not possible to bring it back. </p>
+      </div>
+      <div class="images two">
+        <figure>
+          <img src="./out/pasta.jpg" alt="pasta" />
+          <figcaption>
+            <h3>Original Pasta</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/blurred_pasta.jpg" alt="blureed" />
+          <figcaption>
+            <h3>Blurred Pasta</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/blurred_then_sharpened_high_freq.jpg" alt="blurred_then_sharpened_high_freq" />
+          <figcaption>
+            <h3>High Frequency</h3>
+          </figcaption>
+        </figure>
+          <figure>
+          <img src="./out/blurred_then_sharpened_pasta.jpg" alt="blurred_then_sharpened_pasta"/>
+          <figcaption>
+            <h3>Blurred then sharpened pasta</h3>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+<section class="section" aria-labelledby="s2-title">
+      <h2 id="s2-title">Part 2.2: Hybrid Image </h2>
+      <div class="desc">
+        <p>To create a hybrid image, I first aligned the two images using the starter code given. From there, I took all the high frequency information from the cat, and all the low frequency information from Derek. Then, after aligning them at the eyes, I overlaid these images on eachother, as seen below. I also computed the 2D Fourier transform of the original images, the high and low frequency images, and the overlay. The cutoff frequency which seemed to work well for me was 5. 
+        </p>
+      </div>
+      <div class="images many">
+        <figure>
+          <img src="./out/DerekPicturebw.jpg" alt="derek" />
+          <figcaption>
+            <h3>Derek</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/nutmegbw.jpg" alt="nutmeg" />
+          <figcaption>
+            <h3>Nutmeg</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/low_freq.jpg" alt="derek2" />
+          <figcaption>
+            <h3>Low frequency + aligned Derek</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/high_freq.jpg" alt="nutmeg2" />
+          <figcaption>
+            <h3>High frequency + aligned Nutmeg</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/hybrid.jpg" alt="hyrid" />
+          <figcaption>
+            <h3>Derek + Nutmeg Hybrid</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/img1.jpg" alt="fftderek" />
+          <figcaption>
+            <h3>Derek Fourier Transform</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/img2.jpg" alt="fftnutmeg" />
+          <figcaption>
+            <h3>Nutmeg Fourier Transform</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/img3.jpg" alt="lowfreqfourrier" />
+          <figcaption>
+            <h3>Derek Low Frequency Fourier Transform</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/img4.jpg" alt="highfreqfourrier" />
+          <figcaption>
+            <h3>Nutmeg High Frequency Fourier Transform</h3>
+          </figcaption>
+        </figure>
+      <figure>
+          <img src="./out/img5.jpg" alt="hybridfourrier" />
+          <figcaption>
+            <h3>Hybrid Image Fourier Transform</h3>
+          </figcaption>
+      </figure>
+    </div>
+             <p>In the fourier images, we can see that the lines in the low and high frequency images are extracted from the respective original images. Then, in the hybrid image, we can see these lines (frequencies) are overlaid onto eachother, forming the hybrid.           I repeated the overlay process for two other sets of images, as seen below. 
+</p>
+    <div class="images three">
+        <figure>
+          <img src="./out/angry.jpg" alt="angry" />
+          <figcaption>
+            <h3>Angry Hank</h3>
+          </figcaption>
+      </figure>
+              <figure>
+          <img src="./out/happy.jpg" alt="happy" />
+          <figcaption>
+            <h3>Happy Hank</h3>
+          </figcaption>
+      </figure>
+          <figure>
+          <img src="./out/low_freq2.jpg" alt="low_freq2" />
+          <figcaption>
+            <h3>Low frequency </h3>
+          </figcaption>
+      </figure>
+      <figure>
+          <img src="./out/high_freq2.jpg" alt="high_freq2" />
+          <figcaption>
+            <h3>High frequency</h3>
+          </figcaption>
+      </figure>
+                <figure>
+          <img src="./out/hybrid2.jpg" alt="hybrid" />
+          <figcaption>
+            <h3>Hybrid</h3>
+          </figcaption>
+      </figure>
+      </div>
+      <div class="images three">
+        <figure>
+          <img src="./out/watch.jpg" alt="watch" />
+          <figcaption>
+            <h3>Watch</h3>
+          </figcaption>
+      </figure>
+              <figure>
+          <img src="./out/gears.jpg" alt="Gears" />
+          <figcaption>
+            <h3>Gears</h3>
+          </figcaption>
+      </figure>
+          <figure>
+          <img src="./out/low_freq3.jpg" alt="low_freq3" />
+          <figcaption>
+            <h3>Low frequency </h3>
+          </figcaption>
+      </figure>
+      <figure>
+          <img src="./out/high_freq3.jpg" alt="high_freq3" />
+          <figcaption>
+            <h3>High frequency</h3>
+          </figcaption>
+      </figure>
+                <figure>
+          <img src="./out/hybrid3.jpg" alt="hybrid3" />
+          <figcaption>
+            <h3>Hybrid</h3>
+          </figcaption>
+      </figure>
+      </div>
+    
+    </section>
+
+     <!-- Section 3 -->
+    <section class="section" aria-labelledby="s3-title">
+      <h2 id="s3-title">Part 2.3: Gaussian and Laplacian Stacks</h2>
+      <div class="desc">
+        <p>To create a Laplacian stack, I first created a Gaussian stack, where I blurred the images with a Gaussian filter at different levels. Then, I subtracted each tier of the Gaussian stack from the tier above it, and these differences form a Laplacian stack. The last level is just the most blurry Gaussian image, since there isn't any frequencies left to subtract away. By this logic, the Laplacian stack gets all of the high frequency details near the top tiers of the stack and all the lower frequency information at the lower tiers. Using this, I consructed the Oraple, where I found that using a kernel size of 300 seemed to work pretty well, as seen below. </p>
+
+      </div>
+      <div class="images three">
+        <figure>
+          <img src="./out/stack/applel0.jpg" alt="applel0" />
+          <figcaption>
+            <h3>Tier 0 Apple</h3>
+          </figcaption>
+        </figure>
+               <figure>
+          <img src="./out/stack/orangel0.jpg" alt="orangel0" />
+          <figcaption>
+            <h3>Tier 0 Orange</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/stack/blendl0.jpg" alt="blendl0" />
+          <figcaption>
+            <h3>Tier 0 blend</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/stack/applel2.jpg" alt="applel2" />
+          <figcaption>
+            <h3>Tier 2 Apple</h3>
+          </figcaption>
+        </figure>
+               <figure>
+          <img src="./out/stack/orangel2.jpg" alt="orangel2" />
+          <figcaption>
+            <h3>Tier 2 Orange</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/stack/blendl2.jpg" alt="blendl2" />
+          <figcaption>
+            <h3>Tier 2 blend</h3>
+          </figcaption>
+        </figure>
+                <figure>
+          <img src="./out/stack/applel4.jpg" alt="applel4" />
+          <figcaption>
+            <h3>Tier 4 Apple</h3>
+          </figcaption>
+        </figure>
+               <figure>
+          <img src="./out/stack/orangel4.jpg" alt="orangel4" />
+          <figcaption>
+            <h3>Tier 4 Orange</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/stack/blendl4.jpg" alt="blendl4" />
+          <figcaption>
+            <h3>Tier 4 blend</h3>
+          </figcaption>
+        </figure>
+                <figure>
+          <img src="./out/stack/applemasked.jpg" alt="applemasked" />
+          <figcaption>
+            <h3>Apple mask</h3>
+          </figcaption>
+        </figure>
+               <figure>
+          <img src="./out/stack/orangemasked.jpg" alt="orangemasked" />
+          <figcaption>
+            <h3>Orange mask</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/stack/final_blend.jpg" alt="final_blend" />
+          <figcaption>
+            <h3>Oraple</h3>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+     <!-- Section 3 -->
+    <section class="section" aria-labelledby="s3-title">
+      <h2 id="s3-title">Part 2.4: Multiresolution Blending</h2>
+      <div class="desc">
+        <p>I also experimented with this on a soccer ball and a basketball, as seen below:</p>
+
+      </div>
+      <div class="images three">
+        <figure>
+          <img src="./data/soccer.jpg" alt="soccerball" />
+          <figcaption>
+            <h3>Soccer ball</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/basketball.jpg" alt="basketball" />
+          <figcaption>
+            <h3>Basketball</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/stack/final_blend_soccer_basketball.jpg" alt="final_blend_soccer_basketball" />
+          <figcaption>
+            <h3>Soccer ball + basketball</h3>
+          </figcaption>
+        </figure>
+               
+      </div>
+        <p>However, this is not that interesting, and since the colors in the images are not very similar, this does not work well. What we can do is apply a nonlinear mask to make the image blend look more creative and realistic. I decided to blend a picture of the desert and the ocean, using a sin wave mask to make the shore more realistic. To make the sin mask, I replaced the vertical split with a loop that sets pixels above the sin curve y = h/2 + a*sin(fx) to 1 (where h is height, a is amplitude, f is frequency), and any pixels below this function to 0.</p>
+              <div class="images three">
+        <figure>
+          <img src="./data/desert.jpg" alt="desert" />
+          <figcaption>
+            <h3>Desert</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/water.jpg" alt="water" />
+          <figcaption>
+            <h3>Water</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./out/stack/final_blend_desert_water.jpg" alt="final_blend_desert_water" />
+          <figcaption>
+            <h3>Desert + Water</h3>
+          </figcaption>
+        </figure>
+
+      

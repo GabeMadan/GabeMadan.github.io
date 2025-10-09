@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Project 2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f9fafb;
+      --card: #fff;
+      --text: #333;
+      --text-strong: #222;
+      --muted: #444;
+      --border: #eee;
+      --accent: #4a90e2;
+      --accent-hover: #357ab8;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      color: var(--text-strong);
+      text-align: center;
+    }
+
+    h2 {
+      margin: 40px 0 16px;
+      font-size: 20px;
+      color: var(--text-strong);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .desc {
+      margin: 12px 0 24px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    /* Responsive image grids */
+    .images {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 8px;
+    }
+
+    /* Section-specific grid templates */
+    .images.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .images.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .images.many {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    @media (max-width: 900px) {
+      .images.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .images.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .images.ten { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 20px; }
+      .images.two { grid-template-columns: 1fr; }
+      .images.three { grid-template-columns: 1fr; }
+
+      .images.ten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    figure {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    figure:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: auto;
+      object-fit: cover;
+    }
+
+    figcaption {
+      width: 100%;
+      padding: 10px 12px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .back {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 10px 18px;
+      text-decoration: none;
+      color: #fff;
+      background: var(--accent);
+      border-radius: 6px;
+    }
+
+    .back:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Project 2</h1>
+
+    <!-- Section 1 -->
+    <section class="section" aria-labelledby="s1-title">
+      <h2 id="s1-title">Part A.1: Shoot the pictures</h2> 
+      <div class="desc">
+        <p> To shoot the pictures, I chose a relatively open outdoor scene, where I would then take a picture, rotate the phone slightly (using the camera as a pivot point), and take another picture. Below are two sets of images I took. 
+        </p>
+      </div>
+      <div class="images two">
+        <figure>
+          <img src="./data/IMG_8625.jpg" alt="img1" />
+          <figcaption>
+            <h3>Field (image 1)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/IMG_8626.jpg" alt="img2" />
+          <figcaption>
+            <h3>Field (image 2)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/IMG_8623.jpg" alt="img3" />
+          <figcaption>
+            <h3>VLSB (image 1)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/IMG_8624.jpg" alt="img4" />
+          <figcaption>
+            <h3>VLSB (image 2)</h3>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+
+    <!-- Section 2 -->
+    <section class="section" aria-labelledby="s2-title">
+      <h2 id="s2-title">Part A.2: Recover Homographies</h2>
+      <div class="desc">
+        <p>We start with the equation p' = Hp. Below are the correspondences visualized on the images:
+        </p>
+      </div>
+      <div class="images two">
+        <figure>
+          <img src="./output/grasscorrespondances1.jpg" alt="1" />
+          <figcaption>
+            <h3>Field (image 1) correspondences</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/grasscorrespondances2.jpg" alt="2" />
+          <figcaption>
+            <h3>Field (image 2) correspondences</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/vlsbcorrespondances1.jpg" alt="cameramandy" />
+          <figcaption>
+            <h3>VLSB (image 1) correspondences</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/vlsbcorrespondances2.jpg" alt="cameramangrad" />
+          <figcaption>
+            <h3>VLSB (image 2) correspondances</h3>
+          </figcaption>
+        </figure>
+      </div>
+        <p>I solved for the system of equations by setting up the equation p' = Hp, with H being a matrix that contained values h1, h2, ... h9. h9 = 1, since its the scaling factor. Then, I set p = [x, y] and p' = [x', y']. I then added an extra dimension of 1 to p and p' such that the matrix multiplication would work out. From there, I expanded the multiplication on the right side of the equation, then rerarranged it such that I got two equations which were linear in x' and y'. These equations were xh1 + yh2 + h3 - xx'h7 - x'yh8 - x' = 0 and xh4 + yh5 + h6 - xy'h7 - yy'h8 - y'h9 = 0. Then, we can extract all the h values, such that we have [x, y, 1, 0, 0, 0, -xx', -xy', -x'] * h = 0 and [0, 0, 0, x, y, 1, -xy', -yy', -y'] = 0. This applies for any two corresponding points. 
+        </p>
+        
+    </section>
+    <section class="section" aria-labelledby="s3-title">
+      <h2 id="s3-title">Part A.3: Recover Homographies</h2>
+      <div class="desc">
+        <p>For this part, I chose the two below example images. I didn't notice that much of a difference in result between nearest neighbor interpolation vs bilinear interpolation, except in runtime, where the nearest neighbor interpolation ran about 1.5x-2x faster. </p>
+      </div>
+      <div class="images two">
+        <figure>
+          <img src="./data/IMG_8634.jpg" alt="Rodgers" />
+          <figcaption>
+            <h3>Aaron Rodgers (slanted)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/IMG_8636.jpg" alt="lotf" />
+          <figcaption>
+            <h3>Lord of the Flies (slanted) </h3>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="images many">
+        <figure>
+          <img src="./output/nn_interpolation1.jpg" alt="Rodgers_nn_int" />
+          <figcaption>
+            <h3>Aaron Rodgers NN interpolation</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/nn_interpolation.jpg" alt="lotf_nn_int" />
+          <figcaption>
+            <h3>Lord of the Flies NN interpolation </h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/nn1.jpg" alt="Rodgers_nn_int_scaled" />
+          <figcaption>
+            <h3>Aaron Rodgers NN interpolation scaled</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/nn.jpg" alt="lotf_nn_int_scaled" />
+          <figcaption>
+            <h3>Lord of the Flies NN interpolation scaled</h3>
+          </figcaption>
+        </figure>
+                <figure>
+          <img src="./output/bilinear_interpolation1.jpg" alt="Rodgers_bi_int" />
+          <figcaption>
+            <h3>Aaron Rodgers Bilinear interpolation</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/bilinear_interpolation.jpg" alt="lotf_bi_int" />
+          <figcaption>
+            <h3>Lord of the Flies Bilinear interpolation </h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/bilinear1.jpg" alt="Rodgers_bi_int_scaled" />
+          <figcaption>
+            <h3>Aaron Rodgers Bilinear interpolation scaled</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/bilinear.jpg" alt="lotf_bi_int_scaled" />
+          <figcaption>
+            <h3>Lord of the Flies Bilinear interpolation scaled</h3>
+          </figcaption>
+        </figure>
+        
+      </div>
+    </section>
+     <!-- Section 3 -->
+    <section class="section" aria-labelledby="s3-title">
+      <h2 id="s3-title">Part A.4: Blending</h2>
+      <div class="desc">
+        <p>To blend two images together to create a mosaic, I used the Nearest Neighbor interpolation from the previous part. First, I hand selected corresponding points in each section of images which overlapped. Next, I used the interpolation to warp one image into the coordinate space of the other using the computed homography. Then, I blended the overlapping regions using a weighted average, where alpha is 1 at the center of each image and falls off linearly until it gets to 0 near the edges. There are some minor artifacts even after smoothing, but I think this is because of two reasons: firstly, my images were not perfectly rotated around a singular point, as its difficult to keep the camera perfectly still in space and rotate it. Secondly, my images have a lot of detail in them such as leaves and grass, and therefore, any slight misalignment is noticable. However, I think the final product looks pretty good considering the images were taken by hand. </p>
+      </div>
+      <div class="images three">
+        <figure>
+          <img src="./data/IMG_8623.jpg" alt="vlsb1" />
+          <figcaption>
+            <h3>VLSB (image 1)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/IMG_8624.jpg" alt="vlsb2" />
+          <figcaption>
+            <h3>VLSB (image 2)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/vlsbfinal.jpg" alt="vlsbfinal" />
+          <figcaption>
+            <h3>VLSB Panorama</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/IMG_8625.jpg" alt="grass1" />
+          <figcaption>
+            <h3>Grass (image 1)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/IMG_8626.jpg" alt="grass2" />
+          <figcaption>
+            <h3>Grass (image 2)</h3>
+          </figcaption>
+        </figure>
+                <figure>
+          <img src="./output/grassfinal.jpg" alt="grassfinal" />
+          <figcaption>
+            <h3>Grass Panorama</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/IMG_8621.jpg" alt="dino1" />
+          <figcaption>
+            <h3>Dinosaur (image 1)</h3>
+          </figcaption>
+        </figure>
+                <figure>
+          <img src="./data/IMG_8622.jpg" alt="dino2" />
+          <figcaption>
+            <h3>Dinosaur (image 2)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./output/dinofinal.jpg" alt="finaldino" />
+          <figcaption>
+            <h3>Dinosaur Panorama</h3>
+          </figcaption>
+        </figure>
+      </div>
+    </section>

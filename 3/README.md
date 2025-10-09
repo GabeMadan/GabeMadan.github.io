@@ -1,0 +1,1 @@
+To run the code, simply run python3 process.py from the root directory. In the code are three functions: the compute H function, the Bilinear interpolation function, and the Nearest Neighbor interpolation function, plus code for processing the images for warping. 

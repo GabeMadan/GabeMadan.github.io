@@ -147,7 +147,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Project 2</h1>
+    <h1>Project 3</h1>
 
     <!-- Section 1 -->
     <section class="section" aria-labelledby="s1-title">
@@ -330,7 +330,7 @@
             <h3>Grass (image 2)</h3>
           </figcaption>
         </figure>
-                <figure>
+        <figure>
           <img src="./output/grassfinal.jpg" alt="grassfinal" />
           <figcaption>
             <h3>Grass Panorama</h3>
@@ -356,3 +356,129 @@
         </figure>
       </div>
     </section>
+     <section class="section" aria-labelledby="s3-title">
+      <h2 id="s3-title">Part B.1: Harris Corner Detection</h2>
+      <div class="desc">
+        <p> To do Harris detection, I first converted the image to grayscale and then  found the Harris corner response for each pixel. This detects points where the intensity within a patch changes sharply, which indicates a corner. I also implemented ANMS, which keeps the best points by enforcing the minimum distance between points. This outputs a smaller set of better feature points.</p>
+      </div>
+      <div class="images two">
+
+      <figure>
+          <img src="./output/Dinoharris.jpg" alt="harris dino" />
+          <figcaption>
+            <h3>Dinosaur with Harris Corners</h3>
+          </figcaption>
+        </figure>
+              <figure>
+          <img src="./output/Dinoanms.jpg" alt="anms dino" />
+          <figcaption>
+            <h3>Dinosaur with ANMS</h3>
+          </figcaption>
+        </figure>
+      </div>
+
+      <h2 id="s3-title">Part B.2: Feature Descriptor Extraction</h2>
+       
+      <div class="desc">
+      <p> For feature descriptor extraction, I extracted different patches of the image by looping through each Harris corner and cropping a 40x40 pixel region centered on that point. Then, I downsampled each cropped patch to 8x8 pixels. Below are the patches, as well as the original image with the location of each patch.</p>
+      </div>
+     </section>
+           <div class="images two">
+
+            <figure>
+          <img src="./output/dinopatches.jpg" alt="harris dino" />
+          <figcaption>
+            <h3>Dinosaur patches, from 0 (top left) to 9 (bottom right)</h3>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img src="./output/dinob2.jpg" alt="harris dino" />
+          <figcaption>
+            <h3>Each patch displayed on the dinosaur</h3>
+          </figcaption>
+        </figure>
+           </div>
+  
+
+
+
+        <h2 id="s3-title">Part B.3: Feature Making</h2>
+        <p> I compared the 8x8 patches using their eucliedean distances. For each patch in the first image, I found its two closest matches in the second image. A match was only kept if the best distance was a lot smaller than the next best distance (by a factor of 0.7). Also, the outlier points which are not properly corresponding between the two images will be filtered out in the next part. </h3>
+           <div class="images one">
+
+            <figure>
+          <img src="./output/dinomatch.jpg" alt="dino match" />
+          <figcaption>
+            <h3>Dinosaur point matching, Lowe threshold = 0.7</h3>
+          </figcaption>
+        </figure>
+
+
+
+        <h2 id="s3-title">Part B.4: RANSAC</h2>
+        <p> I implemented 4-point RANSAC as follows. First, I randomly selected 4 matching points, and from these I found the homography from these points. Then, I projected all the points from the first image using the homography, and kept track of their error to their corresponding points in image 2. I repeated this process 500 times, each time checking how many pairs have an error of less than 5 pixels. I did this process on the same three images that I did the manual matching on from part A. For some, it worked better than others, as seen below. </h3>
+           <div class="images two">
+
+            <figure>
+          <img src="./output/dinofinal2.jpg" alt="dino final" />
+          <figcaption>
+            <h3>Dinosaur Panorama using RANSAC</h3>
+          </figcaption>
+        </figure>
+
+        <figure>
+          <img src="./output/dinofinal.jpg" alt="dino final" />
+          <figcaption>
+            <h3>Dinosaur Panorama using manual mapping</h3>
+          </figcaption>
+        </figure>
+        </div>
+
+          <p> In the above dinosaur image, the two methods seem to be very similar, and I couldn't notice much difference between the two results.</h3>
+           <div class="images two">
+
+            <figure>
+          <img src="./output/finalvlsb.jpg" alt="vlsb final" />
+          <figcaption>
+            <h3>VLSB Panorama using RANSAC</h3>
+          </figcaption>
+        </figure>
+          <figure>
+          <img src="./output/vlsbfinal.jpg" alt="vlsb final" />
+          <figcaption>
+            <h3>VLSB Panorama using manual mapping</h3>
+          </figcaption>
+        </figure>
+        
+           </div>
+          <p> In the above VLSB image, the two methods seem to have similar results, but I do see a slight difference. The RANSAC method has the grass detail a bit more clear, whereas the manual method has the details on the building pillars a bit more clear.</h3>
+        <p> The last observation I want to make is regarding the following image, my 3rd panorama. I had hypothesized that this image set would work well with RANSAC since it has so much detail in the leaves and there are so many potential points to map from image 1 to 2. This turned out to be the case, but the issue with so much information is that its also very easy to visually tell when the image is even slightly misaligned. So, if my hands were even a centimeter tranposed between when I took image 1 and 2 for this panorama, the difference is made mmuch more clear in an image which has so much fine detail like this one. I noticed this issue in many of my pictures which had grass or leaves in them. In general, I think that whether implemented manually or with RANSAC, panoramas benefit from having less fine detail and a lot of straight edges and corners rather than round curves. 
+           <div class="images two">
+
+          <figure>
+          <img src="./data/IMG_8617.jpg" alt="tree 1" />
+          <figcaption>
+            <h3>Tree Image 2</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./data/IMG_8618.jpg" alt="tree 2" />
+          <figcaption>
+            <h3>Tree Image 1</h3>
+          </figcaption>
+        </figure>
+           </div>
+          <div class="images one">
+
+                    <figure>
+          <img src="./output/treefinal.jpg" alt="tree final" />
+          <figcaption>
+            <h3>Tree Panorama using RANSAC</h3>
+          </figcaption>
+        </figure>
+
+
+
+
+

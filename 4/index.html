@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Project 4</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f9fafb;
+      --card: #fff;
+      --text: #333;
+      --text-strong: #222;
+      --muted: #444;
+      --border: #eee;
+      --accent: #4a90e2;
+      --accent-hover: #357ab8;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      color: var(--text-strong);
+      text-align: center;
+    }
+
+    h2 {
+      margin: 40px 0 16px;
+      font-size: 20px;
+      color: var(--text-strong);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .desc {
+      margin: 12px 0 24px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    /* Responsive image grids */
+    .images {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 8px;
+    }
+
+    /* Section-specific grid templates */
+    .images.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .images.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .images.many {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    @media (max-width: 900px) {
+      .images.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .images.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .images.ten { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 20px; }
+      .images.two { grid-template-columns: 1fr; }
+      .images.three { grid-template-columns: 1fr; }
+
+      .images.ten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    figure {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    figure:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: auto;
+      object-fit: cover;
+    }
+
+    figcaption {
+      width: 100%;
+      padding: 10px 12px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .back {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 10px 18px;
+      text-decoration: none;
+      color: #fff;
+      background: var(--accent);
+      border-radius: 6px;
+    }
+
+    .back:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Project 4</h1>
+
+    <!-- Section 1 -->
+    <section class="section" aria-labelledby="s1-title">
+      <h2 id="s1-title">Part 0: Calibrating Your Camera and Capturing a 3D Scan</h2> 
+      <div class="desc">
+        <p> I first took 30-40 images of the ArUco tags with my iphone camera and zoom level 1. I used these images to calibrate the camera using cv2.calibrateCamera(). I got the following camera matrix 
+            [[3068, 0, 1420,]
+            [0, 3027, 2084],
+            [0, 0, 1]]
+            with distance coefficients [0.32, -1.82, 0.003, -0.011, 2.872]. 
+            I then solved the PnP problem and displayed the images in Viser, as seen below:
+        </p>
+      </div>
+      <div class="images two">
+        <figure>
+          <img src="./viser1.png" alt="img1" />
+          <figcaption>
+            <h3>Viser visualization (1st perspective)</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./viser2.png" alt="img2" />
+          <figcaption>
+            <h3>Viser visualization (2nd perspective)</h3>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+
+    <!-- Section 2 -->
+    <section class="section" aria-labelledby="s2-title">
+      <h2 id="s2-title">Part 1: Fit a Neural Field to a 2D Image</h2>
+      <div class="desc">
+        <p>My model architecture takes in 42-dimensional coordinates as an input, and it predicts 3 channel RGB values using a sigmoid activation function. It has two hidden layers, which each have a width of 256 and ReLU activation functions. The positional encoder uses 10 frequency bands with sin and cos, which expands the original 2D coordinates into 42-dimensions. I trained using the Adam optimizer with a lr of 1e-2, and used 3000 iterations with batches of 10000 randomly sampled pixels for each step. Below is the training progression on the fox image. 
+        </p>
+      </div>
+      <div class="images many">
+        <figure>
+          <img src="./foxlebron/fox1.png" alt="1" />
+          <figcaption>
+            <h3>Iteration 25</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./foxlebron/fox2.png" alt="2" />
+          <figcaption>
+            <h3>Iteration 100</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./foxlebron/fox3.png" alt="3" />
+          <figcaption>
+            <h3>Iteration 500</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./foxlebron/fox4.png" alt="4" />
+          <figcaption>
+            <h3>Iteration 1000</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./foxlebron/fox5.png" alt="5" />
+          <figcaption>
+            <h3>Iteration 3000</h3>
+          </figcaption>
+        </figure>
+      </div>
+        <p>I also applied this process to an image of Lebron, as seen below. 
+        </p>
+      <div class="images many">
+        <figure>
+          <img src="./foxlebron/lebron1.png" alt="1" />
+          <figcaption>
+            <h3>Iteration 25</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./foxlebron/lebron2.png" alt="2" />
+          <figcaption>
+            <h3>Iteration 100</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./foxlebron/lebron3.png" alt="3" />
+          <figcaption>
+            <h3>Iteration 500</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./foxlebron/lebron4.png" alt="4" />
+          <figcaption>
+            <h3>Iteration 1000</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./foxlebron/lebron5.png" alt="5" />
+          <figcaption>
+            <h3>Iteration 3000</h3>
+          </figcaption>
+        </figure>
+      </div>
+        
+      <div class="images one">
+        <figure>
+          <img src="./foxlebron/foxpsnr.png" alt="6" />
+          <figcaption>
+            <h3>PSNR graph for fox</h3>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="images two">
+        <figure>
+          <img src="./foxlebron/foxL2W64.png" alt="6" />
+          <figcaption>
+            <h3>L = 2, Width = 64</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./foxlebron/foxL2W256.png" alt="6" />
+          <figcaption>
+            <h3>L = 2, Width = 256</h3>
+          </figcaption>
+        </figure>
+                <figure>
+          <img src="./foxlebron/foxL10W64.png" alt="6" />
+          <figcaption>
+            <h3>L = 10, Width = 64</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./foxlebron/fox5.png" alt="6" />
+          <figcaption>
+            <h3>L = 10, Width = 256</h3>
+          </figcaption>
+        </figure>
+      </div>
+
+
+
+    </section>
+    <section class="section" aria-labelledby="s3-title">
+      <h2 id="s3-title">Part 2: Fit a Neural Radiance Field from Multi-view Image</h2>
+      <div class="desc">
+        <p>I visualized the setup by first generating rays for each camera. To do this, I converted its position into a 3D direction using the camera intrinsics, and then transformed that direction into the world space using a camera-to-world matrix. Then, I sampled 3D points along each ray for Nerf to query. I then put this into a RaysData class, which computes each pixel's ray, origin, direction, and pixel color, and the dataloader just returns random rays and their sampled points for training. I used 64 samples per ray, and below are the visualizations of the rays for the lego truck. 
+        </p>
+      <div class="images two">
+        <figure>
+          <img src="./singlecam.png" alt="1" />
+          <figcaption>
+            <h3>Rays for a single camera</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./allcam.png" alt="2" />
+          <figcaption>
+            <h3>Rays for all cameras</h3>
+          </figcaption>
+        </figure>
+      </div>
+        <p>Next, I created an MLP similar to what was described in the spec. It has two sub-networks, the first of which takes a 63-dimensional PE encoded point, passes it through 5 fully connected layers, concatenates the input, and then goes through another 5 fully connected layers. The other sub-network takes in a 256-dimensional density feature concatenated with a 27-dimensional view direction and feeds it thorugh a 128 unit MLP to output RGB values. Below are the progress images for the lego NeRF, as well as the PSNR and loss charts.
+        </p>
+        <div class="images many">
+          <figure>
+            <img src="./lego/lego500.png" alt="2" />
+            <figcaption>
+              <h3>Lego NeRF (500 iterations)</h3>
+            </figcaption>
+          </figure>
+
+          <figure>
+            <img src="./lego/lego1000.png" alt="2" />
+            <figcaption>
+              <h3>Lego NeRF (1000 iterations)</h3>
+            </figcaption>
+          </figure>
+          <figure>
+            <img src="./lego/lego1500.png" alt="2" />
+            <figcaption>
+              <h3>Lego NeRF (1500 iterations)</h3>
+            </figcaption>
+          </figure>
+          <figure>
+            <img src="./lego/lego2000.png" alt="2" />
+            <figcaption>
+              <h3>Lego NeRF (2000 iterations)</h3>
+            </figcaption>
+          </figure>
+            <figure>
+            <img src="./lego/lego2500.png" alt="2" />
+            <figcaption>
+              <h3>Lego NeRF (2500 iterations)</h3>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="images two">
+          <figure>
+            <img src="./lego/PSNR_lego.png" alt="2" />
+            <figcaption>
+              <h3>PSNR chart for Lego NeRF</h3>
+            </figcaption>
+          </figure>
+         <figure>
+            <img src="./lego/loss_lego.png" alt="2" />
+            <figcaption>
+              <h3>Loss chart for Lego NeRF</h3>
+            </figcaption>
+          </figure>
+        </div>
+          <div class="images two">
+            <figure>
+              <img src="./lego/vid_lego.gif" alt="Lego GIF" />
+              <figcaption>
+                <h3>Lego NeRF GIF</h3>
+              </figcaption>
+            </figure>
+          </div>
+
+
+
+
+    </section>
+     <!-- Section 3 -->
+    <section class="section" aria-labelledby="s3-title">
+      <h2 id="s3-title">Part 2.6: Training with Your Own Data</h2>
+      <div class="desc">
+        <p>To do NeRF on a custom dataset, I trained a model made up of two fully connected MLP blocks (each 5 layers of 256 units with ReLU), a final linear layer for density, and a separate color MLP that takes in the learned features and encoded view directions to predict the RGB value. It computes rays from camera intrinsics/extrinsics, samples 64 points per ray, and feeds them through the network to get a sigma value and an RGB value. I repeated this process for 10000 random rays, and I evaluated training based on PSNR and MSE loss. 
+
+        </p>
+        <p>I found it straightforward to get NeRF working on the Lafufu dataset. Below is my Lafufu dataset loss, progress pics, and gif. </p>
+      </div>
+      <div class="images one">
+        <figure>
+          <img src="./lafufuprogress.png" alt="vlsb1" />
+          <figcaption>
+            <h3>Lafufu progress</h3>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="images two">
+        <figure>
+          <img src="./lafufuloss.png" alt="vlsb2" />
+          <figcaption>
+            <h3>Lafufu Loss</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./lafufupsnr.png" alt="vlsbfinal" />
+          <figcaption>
+            <h3>Lafufu PSNR</h3>
+          </figcaption>
+        </figure>
+      </div>
+        <figure>
+          <img src="./lafufu_gif.gif" alt="vlsbfinal" />
+          <figcaption>
+            <h3>Lafufu PSNR</h3>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+     <p>For my custom dataset though, I wasn't able to produce reliable results with the gif. As seen below, the training progress images seen reasonable.</p>
+      <div class="images one">
+        <figure>
+          <img src="./customprogress.png" alt="vlsbfinal" />
+          <figcaption>
+            <h3>Custom dataset progress pics</h3>
+          </figcaption>
+        </figure>
+      </div>
+      <p>However, I was not able to make the gif rendering work as expected. One reason for this could be that my methods of taking the pictures was not consistent, and that the distance between the object and the camera deviated from image to image. Another reason could be that some of the images have the ArUco tag blocked by the image, though I filtered out these images and attempted training again, with similar results. 
+
+      <div class="images two">
+        <figure>
+          <img src="./losscustom.png" alt="vlsbfinal" />
+          <figcaption>
+            <h3>Custom dataset loss</h3>
+          </figcaption>
+        </figure>
+        <figure>
+          <img src="./customgif.gif" alt="vlsbfinal" />
+          <figcaption>
+            <h3>Custom dataset gif</h3>
+          </figcaption>
+        </figure>
+      </div>
+    </section>

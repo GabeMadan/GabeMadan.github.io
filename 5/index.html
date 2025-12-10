@@ -336,6 +336,56 @@
           <img src="./data/gauss_denoise_750.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
         </figure>
       </div> 
+
+    <p>Below is the code for these images:</p>
+    <pre>
+      <code>
+def iterative_denoise(im_noisy, i_start, prompt_embeds, timesteps, display=True):
+  image = im_noisy
+  finalfinal = None
+  with torch.no_grad():
+    for i in range(i_start, len(timesteps) - 1):
+      # Get timesteps
+      t = timesteps[i]
+      prev_t = timesteps[i+1]
+
+      # get `alpha_cumprod` and `alpha_cumprod_prev` for timestep t from `alphas_cumprod`
+      # compute `alpha`
+      # compute `beta`
+      # ===== your code here! =====
+      a = alphas_cumprod[t]/alphas_cumprod[prev_t]
+      b = (1 - a)
+      # ==== end of code ====
+
+      # Get noise estimate
+      model_output = stage_1.unet(
+          image,
+          t,
+          encoder_hidden_states=prompt_embeds,
+          return_dict=False
+      )[0]
+
+      # Split estimate into noise and variance estimate
+      noise_est, predicted_variance = torch.split(model_output, image.shape[1], dim=1)
+
+      # compute `pred_prev_image` (x_{t'}), the DDPM estimate for the image at the
+      # next timestep, which is slightly less noisy. Use the equation 3.
+      # This is the core of DDPM
+      # ===== your code here! =====
+      x0 = (image - torch.sqrt(1-alphas_cumprod[t].to(image.device)) * noise_est) / torch.sqrt(alphas_cumprod[t].to(image.device))
+      a1 = alphas_cumprod[t].to(image.device)
+      a2 = alphas_cumprod[prev_t].to(image.device)
+      img = torch.sqrt(a2) * b / (1 - a1) * x0 + torch.sqrt(a) * (1 - a2) / (1 - a1) * image
+      pred_prev_image = add_variance(predicted_variance, t, img)
+      # ==== end of code ====
+
+      image = pred_prev_image
+    clean = image.cpu().detach().numpy()
+
+  return clean
+
+      </code>
+    </pre> 
     <h2>1.5: Diffusion Model Sampling</h2>
     <p>For this part, I set i_start = 0, and then passed it through same iterative_denoise function, and by doing this I generated completely random images, as seen below.</p>
       <div class="images five">
@@ -424,30 +474,10 @@ def iterative_denoise_cfg(im_noisy, i_start, prompt_embeds, uncond_prompt_embeds
       # ==== end of code ====
 
       image = pred_prev_image
-      if (i - i_start) % 5 == 0:
-        final = image.float().cpu()[0].permute(1, 2, 0)
-        media.show_image(final)
-        print("iteration = " + str(i) + ", t = " + str(t))
-
-
     clean = image.cpu().detach().numpy()
 
   return clean
 
-
-prompt_embeds = prompt_embeds_dict["a high quality photo"].half().to(device)
-images = []
-for i in range(5):
-  im_noisy = torch.randn(1, 3, 64, 64).half().to(device)
-  clean = iterative_denoise_cfg(im_noisy,
-                            i_start=0,
-                            prompt_embeds=prompt_embeds,
-                            uncond_prompt_embeds=prompt_embeds_dict[''].half().to(device),
-                            timesteps=strided_timesteps, scale=7, display=False)
-  images.append(torch.tensor(clean)[0].permute(1, 2, 0) / 2. + 0.5)
-media.show_images(images)
-
-    
     </code> 
     </pre>
     <p>Below are the resulting generated images:</p>
@@ -564,7 +594,7 @@ media.show_images(images)
           <img src="./data/yos6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
         </figure>
       </div>
-      <h2>1.7.2: Editing Hand-Drawn and Web Images</h2>
+      <h2>1.7.1: Editing Hand-Drawn and Web Images</h2>
       <p>Next, I used a similar process with an online image, as seen below.</p>
         <div class="images seven">
 
@@ -629,10 +659,337 @@ media.show_images(images)
             <figcaption>noise = 20</figcaption>
             <img src="./data/house6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
           </figure>
+        
+          <figure>
+            <figcaption>Original</figcaption>
+            <img src="./data/plane.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 1</figcaption>
+            <img src="./data/plane1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 3</figcaption>
+            <img src="./data/plane2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 5</figcaption>
+            <img src="./data/plane3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 7</figcaption>
+            <img src="./data/plane4.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 10</figcaption>
+            <img src="./data/plane5.png" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 20</figcaption>
+            <img src="./data/plane6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
         </div>
 
+      <h2>1.7.2: Inpainting</h2>
+         <div class="images three">
+          <figure>
+            <figcaption>Original</figcaption>
+            <img src="./data/original_camp.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Mask</figcaption>
+            <img src="./data/camp_mask.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Inpainted</figcaption>
+            <img src="./data/campflower.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Original</figcaption>
+            <img src="./data/eye.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Mask</figcaption>
+            <img src="./data/eyemask.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Inpainted</figcaption>
+            <img src="./data/eyebeach.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Original</figcaption>
+            <img src="./data/tigerog.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Mask</figcaption>
+            <img src="./data/horsemask.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Inpainted</figcaption>
+            <img src="./data/tigerhorse.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+         </div>
+
+         <p>I used the code below to generate these images. The main idea of the code is to start from a fully noisy image and for each timestep, blend the 2 noise predictions and then reinsert the original image outside the mask by re-noising it to the current timestep and combining it with the generated area. </p>
+         <pre>
+          <code>
+def inpaint(original_image, mask, prompt_embeds, uncond_prompt_embeds, timesteps, scale=7, display=True):
+  image = torch.randn_like(original_image).to(device).half()
+  with torch.no_grad():
+    for i in range(len(timesteps) - 1):
+      t = timesteps[i]
+      prev_t = timesteps[i+1]
+      a1 = alphas_cumprod[t].to(image.device)
+      a2 = alphas_cumprod[prev_t].to(image.device)
+      b = (1 - a1/a2)
+      model_output = stage_1.unet(
+          image,
+          t,
+          encoder_hidden_states=prompt_embeds,
+          return_dict=False
+      )[0]
+
+      uncond_model_output = stage_1.unet(image, t, encoder_hidden_states=uncond_prompt_embeds, return_dict=False)[0]
+      noise_est, predicted_variance = torch.split(model_output, image.shape[1], dim=1)
+      uncond_noise_est, _ = torch.split(uncond_model_output, image.shape[1], dim=1)
+      cfg = uncond_noise_est + scale * (noise_est - uncond_noise_est)
+
+      x0 = (image - torch.sqrt(1-a1) * cfg) / torch.sqrt(a1)
+      pred_prev_image = add_variance(predicted_variance, t, (torch.sqrt(a2) * b / (1-a1) * x0) + torch.sqrt(a1/a2) * (1-a2)/(1-a1) * image)
 
 
-        
+
+      noisy = forward(original_image, prev_t).half().to(device)
+      image = pred_prev_image* mask + noisy*(1-mask)
+
+          </code>
+         </pre>
+
+
+
+
+        <h2>1.7.3: Text-Conditional Image-to-Image Translation</h2>
+        <p>For this section, the process was nearly identical to the previous ones, but I just adjusted the prompt from "a high quality image" to something more specific. Below are the results.</p>
+        <div class="images seven">
+          <figure>
+            <figcaption>i = 1</figcaption>
+            <img src="./data/pencil1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 3</figcaption>
+            <img src="./data/pencil2.png" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 5</figcaption>
+            <img src="./data/pencil3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 7</figcaption>
+            <img src="./data/pencil4.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 10</figcaption>
+            <img src="./data/pencil5.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 20</figcaption>
+            <img src="./data/pencil6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Original</figcaption>
+            <img src="./data/original_camp.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 1</figcaption>
+            <img src="./data/watch1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 3</figcaption>
+            <img src="./data/watch2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 5</figcaption>
+            <img src="./data/watch3.png" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 7</figcaption>
+            <img src="./data/watch4.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 10</figcaption>
+            <img src="./data/watch5.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 20</figcaption>
+            <img src="./data/watch6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Original</figcaption>
+            <img src="./data/ogsun.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 1</figcaption>
+            <img src="./data/flower1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 3</figcaption>
+            <img src="./data/flower2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 5</figcaption>
+            <img src="./data/flower3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 7</figcaption>
+            <img src="./data/flower4.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 10</figcaption>
+            <img src="./data/flower5.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>i = 20</figcaption>
+            <img src="./data/flower6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Original</figcaption>
+            <img src="./data/tigerog.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+
+      <h2>1.8: Visual Algorithms</h2>
+        <p>To make a visual anagram, I repeated a similar process above, but each iteration, I flipped the image once and generated an image for a given prompt for the right-side up image, and also generated an image for a different prompt for the upside-down version of the image. Below is the code:</p>
+        <pre>
+          <code>
+def make_flip_illusion(image, i_start, prompt_embeds, uncond_prompt_embeds, timesteps, scale=7, display=True):
+  e1, e2 = prompt_embeds[0], prompt_embeds[1]
+  with torch.no_grad():
+    t_start = timesteps[i_start]
+    image = forward(image, t_start).half().to(device)
+    for i in range(i_start, len(timesteps) - 1):
+      t = timesteps[i]
+      prev_t = timesteps[i+1]
+      a1 = alphas_cumprod[t].to(image.device)
+      a2 = alphas_cumprod[prev_t].to(image.device)
+      b = (1 - a1/a2)
+      model_output = stage_1.unet(
+          image,
+          t,
+          encoder_hidden_states=e1,
+          return_dict=False
+      )[0]
+      uncond_model_output = stage_1.unet(image, t, encoder_hidden_states=uncond_prompt_embeds, return_dict=False)[0]
+      flipped = torch.flip(image, dims=(2,))
+      model_output_flipped = stage_1.unet(flipped, t, encoder_hidden_states=e2, return_dict=False)[0]
+      uncond_model_output_flipped = stage_1.unet(flipped, t, encoder_hidden_states=uncond_prompt_embeds, return_dict=False)[0]
+
+      noise_est, predicted_variance = torch.split(model_output, image.shape[1], dim=1)
+      uncond_noise_est, _ = torch.split(uncond_model_output, image.shape[1], dim=1)
+      cfg = uncond_noise_est + scale * (noise_est - uncond_noise_est)
+
+      noise_est_flipped, _ = torch.split(model_output_flipped, image.shape[1], dim=1)
+      uncond_noise_est_flipped, _ = torch.split(uncond_model_output_flipped, image.shape[1], dim=1)
+      cfg_flipped = uncond_noise_est_flipped + scale * (noise_est_flipped - uncond_noise_est_flipped)
+      cfg_flipped = torch.flip(cfg_flipped, dims=(2,))
+
+      cfg = (cfg + cfg_flipped) / 2
+      x0 = (image - torch.sqrt(1-a1) * cfg) / torch.sqrt(a1)
+
+      
+      pred_prev_image = add_variance(predicted_variance, t, (torch.sqrt(a2) * b / (1-a1) * x0) + torch.sqrt(a1/a2) * (1-a2)/(1-a1) * image)
+
+    
+      image = pred_prev_image
+
+    return image
+          </code>
+        </pre>
+        <h2>An oil painting of an old man + a photo of a dog</h2>
+        <div class="images two">
+          <figure>
+            <figcaption></figcaption>
+            <img src="./data/dogman2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption></figcaption>
+            <img src="./data/dogman1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+        <h2>A man wearing a hat + a lithograph of waterfalls</h2>
+
+        <div class="images two">
+
+          <figure>
+            <figcaption></figcaption>
+            <img src="./data/manwater.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption></figcaption>
+            <img src="./data/manwater2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+
+        <h2>1.9: Hybrid Images</h2>
+        <p>To make hybrid images, I combined the low freq noise which was predicted from the first prompt with the high freq from the other prompt at each iteration step. Then, I used that combined noise to guide the denoising process, as done before.</p>
+      <pre>
+        <code>
+def make_hybrids(image, i_start, prompt_embeds, uncond_prompt_embeds, timesteps, scale=7, display=True):
+  e1, e2 = prompt_embeds[0], prompt_embeds[1]
+  with torch.no_grad():
+    t_start = timesteps[i_start]
+    image = forward(image, t_start).half().to(device)
+    for i in range(i_start, len(timesteps) - 1):
+      t = timesteps[i]
+      prev_t = timesteps[i+1]
+      a1 = alphas_cumprod[t].to(image.device)
+      a2 = alphas_cumprod[prev_t].to(image.device)
+      b = (1 - a1/a2)
+      model_output1 = stage_1.unet(
+          image,
+          t,
+          encoder_hidden_states=e1,
+          return_dict=False
+      )[0]
+      uncond_model_output1 = stage_1.unet(image, t, encoder_hidden_states=uncond_prompt_embeds, return_dict=False)[0]
+      n1, var = torch.split(model_output1, image.shape[1], dim=1)
+      uncondn1, _ = torch.split(uncond_model_output1, image.shape[1], dim=1)
+      cfg1 = uncondn1 + scale * (n1 - uncondn1)
+
+
+      model_output2 = stage_1.unet(
+          image,
+          t,
+          encoder_hidden_states=e2,
+          return_dict=False
+      )[0]
+      uncond_model_output2 = stage_1.unet(image, t, encoder_hidden_states=uncond_prompt_embeds, return_dict=False)[0]
+      n2, var = torch.split(model_output2, image.shape[1], dim=1)
+      uncondn2, _ = torch.split(uncond_model_output2, image.shape[1], dim=1)
+      cfg2 = uncondn2 + scale * (n2 - uncondn2)
+
+      low = TF.gaussian_blur(cfg1, 33, 2)
+      high = cfg2 - TF.gaussian_blur(cfg2, 33, 2)
+      x0 = (image - torch.sqrt(1-a1) * (low + high)) / torch.sqrt(a1)
+      pred_prev_image = add_variance(var, t, (torch.sqrt(a2) * b / (1-a1) * x0) + torch.sqrt(a1/a2) * (1-a2)/(1-a1) * image)
+
+      image = pred_prev_image
+
+    return image
+        </code>
+      </pre>
+
+    <p> Below are my hybrid images.</p>
+      <div class="images two">
+          <figure>
+            <figcaption>a photo of a hipster barista + a photo of the amalfi coast</figcaption>
+            <img src="./data/barista.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>An oil painting of a snowy mountain village + an oil painting of people around a campfire</figcaption>
+            <img src="./data/snow.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
   </div>
 </body>
+
+

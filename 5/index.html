@@ -79,6 +79,13 @@
     .images.many {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
+    
+    .images.five {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+    .images.seven {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
 
     @media (max-width: 900px) {
       .images.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -180,6 +187,452 @@
       </figure>
     </div>
 
-    <h2>1.1: Implementing the Forward Process</h1>
-    <p> </p>
+    <h2>1.1: Implementing the Forward Process</h2>
+    <p>First, I implemented the forward function to add noise to the images. Below is my implementation: </p>
+    <pre>
+    <code>
+      
+    def forward(im, t):
+      """
+      Args:
+        im : torch tensor of size (1, 3, 64, 64) representing the clean image
+        t : integer timestep
+
+      Returns:
+        im_noisy : torch tensor of size (1, 3, 64, 64) representing the noisy image at timestep t
+      """
+
+      with torch.no_grad():
+        device = im.device
+        a = alphas_cumprod[t].to(device)
+        e = torch.normal(mean=0, std=1, size=im.shape).to(device)
+
+
+        im_noisy = torch.sqrt(a) * im + torch.sqrt(1-a)*e
+
+        # ===== end of code ====
+
+
+      return im_noisy</code> 
+      </pre>
+      
+      
+      
+      <p>Below is the Campanile image at 0, 250, 500, and 750 noise levels.</p>
+    <div class="images many">
+      <figure>
+        <figcaption>Original Campanile</figcaption>
+        <img src="./data/original_camp.jpg" alt="Camp" />
+      </figure>
+      <figure>
+        <figcaption>Noise = 250</figcaption>
+        <img src="./data/camp_250.jpg" alt="A snowy mountain with skiers, p = 40" />
+      </figure>
+      <figure>
+        <figcaption>Noise = 500</figcaption>
+        <img src="./data/camp_500.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+      </figure>
+      <figure>
+        <figcaption>Noise = 750</figcaption>
+        <img src="./data/camp_750.jpg" alt="A beach with wildlife in australia, p = 40" />
+      </figure> 
+    </div>
+    <h2>1.2: Classical De-noising</h2>
+    <p>Next, I tried to de-noise these noisy images using Gaussian blur filtering. However, the results were not very satisfactory, as seen below.</p>
+
+    <div class="images three">
+      <figure>
+        <figcaption>Noise = 250</figcaption>
+        <img src="./data/camp_250.jpg" alt="A snowy mountain with skiers, p = 40" />
+      </figure>
+      <figure>
+        <figcaption>Noise = 500</figcaption>
+        <img src="./data/camp_500.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+      </figure>
+      <figure>
+        <figcaption>Noise = 750</figcaption>
+        <img src="./data/camp_750.jpg" alt="A beach with wildlife in australia, p = 40" />
+      </figure> 
+         <figure>
+        <figcaption>Gaussian filtering (noise = 250)</figcaption>
+        <img src="./data/gaus_denoise_250.jpg" alt="Camp" />
+      </figure>
+      <figure>
+        <figcaption>Gaussian filtering (noise = 250)</figcaption>
+        <img src="./data/gauss_denoise_500.jpg" alt="A snowy mountain with skiers, p = 40" />
+      </figure>
+      <figure>
+        <figcaption>Gaussian filtering (noise = 250)</figcaption>
+        <img src="./data/gauss_denoise_750.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+      </figure>
+    </div> 
+    <h2>1.3: One-Step De-noising</h2>
+    <p>Next, I tried one-step de-noising, where I used a UNet to fill in the image with the prompt "a high quality photo". </p>
+    <div class="images three">
+
+      <figure>
+        <figcaption>Noise = 250</figcaption>
+        <img src="./data/camp_250.jpg" alt="A snowy mountain with skiers, p = 40" />
+      </figure>
+      <figure>
+        <figcaption>Noise = 500</figcaption>
+        <img src="./data/camp_500.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+      </figure>
+      <figure>
+        <figcaption>Noise = 750</figcaption>
+        <img src="./data/camp_750.jpg" alt="A beach with wildlife in australia, p = 40" />
+      </figure> 
+         <figure>
+        <figcaption>One-step (noise = 250)</figcaption>
+        <img src="./data/one_step_250.jpg" alt="Camp" />
+      </figure>
+      <figure>
+        <figcaption>One-step (noise = 500)</figcaption>
+        <img src="./data/one_step_denoise_500.jpg" alt="A snowy mountain with skiers, p = 40" />
+      </figure>
+      <figure>
+        <figcaption>One-step (noise = 750)</figcaption>
+        <img src="./data/one_step_denoise_750.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+      </figure>
+    </div>
+    <h2>1.4: Iterative De-noising</h2>
+    <p>I then implemented iterative de-noising, where I created <code>strided_timesteps</code>, which started at 990 and decreased by 30 until it reached 0. I then applied to formula from the spec, and I got a much better approximation of the original image, as seen below.</p>
+      <div class="images three">
+
+        <figure>
+          <figcaption>Noise = 750</figcaption>
+          <img src="./data/camp_750.jpg" alt="A beach with wildlife in australia, p = 40" />
+        </figure> 
+          <figure>
+          <figcaption>t = 690</figcaption>
+          <img src="./data/camp1.jpg" alt="Camp" />
+        </figure>
+        <figure>
+          <figcaption>t = 540</figcaption>
+          <img src="./data/camp2.jpg" alt="A snowy mountain with skiers, p = 40" />
+        </figure>
+        <figure>
+          <figcaption>t = 390</figcaption>
+          <img src="./data/camp3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>t = 240</figcaption>
+          <img src="./data/camp4.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>t = 90</figcaption>
+          <img src="./data/camp5.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Iteratively De-noised Final</figcaption>
+          <img src="./data/camp7.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>One-Step De-noised</figcaption>
+          <img src="./data/one_step_denoise_750.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Gaussian De-noised</figcaption>
+          <img src="./data/gauss_denoise_750.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+      </div> 
+    <h2>1.5: Diffusion Model Sampling</h2>
+    <p>For this part, I set i_start = 0, and then passed it through same iterative_denoise function, and by doing this I generated completely random images, as seen below.</p>
+      <div class="images five">
+        <figure>
+          <figcaption>Sample 1</figcaption>
+          <img src="./data/part5.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Sample 2</figcaption>
+          <img src="./data/part51.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Sample 3</figcaption>
+          <img src="./data/part52.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Sample 4</figcaption>
+          <img src="./data/part53.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Sample 5</figcaption>
+          <img src="./data/part54.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+       </div>
+
+     <h2>1.6: CFG</h2>
+        <p>Next, I implemented CFG according to the algorithm described in the spec. I did this by running the UNet twice, and then combining the noise amounts. I then added conditional variance to the output, and resulting images were much better quality then the diffusion model sampling images. My code for this section is below </p>
+        <pre>
+    <code>
+      
+# The conditional prompt embedding
+prompt_embeds = prompt_embeds_dict['a high quality photo']
+
+# The unconditional prompt embedding
+uncond_prompt_embeds = prompt_embeds_dict['']
+
+
+def iterative_denoise_cfg(im_noisy, i_start, prompt_embeds, uncond_prompt_embeds, timesteps, scale=7, display=True):
+  image = im_noisy
+
+  with torch.no_grad():
+    for i in range(i_start, len(timesteps) - 1):
+      # Get timesteps
+      t = timesteps[i]
+      prev_t = timesteps[i+1]
+
+      # Get `alpha_cumprod`, `alpha_cumprod_prev`, `alpha`, `beta`
+      # ===== your code here! =====
+      a1 = alphas_cumprod[t].to(image.device)
+      a2 = alphas_cumprod[prev_t].to(image.device)
+      b = (1 - a1/a2)
+
+      # ==== end of code ====
+
+      # Get cond noise estimate
+      model_output = stage_1.unet(
+          image,
+          t,
+          encoder_hidden_states=prompt_embeds,
+          return_dict=False
+      )[0]
+
+      # Get uncond noise estimate
+      uncond_model_output = stage_1.unet(
+          image,
+          t,
+          encoder_hidden_states=uncond_prompt_embeds,
+          return_dict=False
+      )[0]
+
+      # Split estimate into noise and variance estimate
+      noise_est, predicted_variance = torch.split(model_output, image.shape[1], dim=1)
+      uncond_noise_est, _ = torch.split(uncond_model_output, image.shape[1], dim=1)
+
+      # Compute the CFG noise estimate based on equation 4
+      # ===== your code here! =====
+      cfg = uncond_noise_est + scale * (noise_est - uncond_noise_est)
+      # ==== end of code ====
+
+
+      # Get `pred_prev_image`, the next less noisy image.
+      # ===== your code here! =====
+      x0 = (image - torch.sqrt(1-a1) * cfg) / torch.sqrt(a1)
+
+      pred_prev_image = add_variance(predicted_variance, t, (torch.sqrt(a2) * b / (1-a1) * x0) + torch.sqrt(a1/a2) * (1-a2)/(1-a1) * image)
+      # ==== end of code ====
+
+      image = pred_prev_image
+      if (i - i_start) % 5 == 0:
+        final = image.float().cpu()[0].permute(1, 2, 0)
+        media.show_image(final)
+        print("iteration = " + str(i) + ", t = " + str(t))
+
+
+    clean = image.cpu().detach().numpy()
+
+  return clean
+
+
+prompt_embeds = prompt_embeds_dict["a high quality photo"].half().to(device)
+images = []
+for i in range(5):
+  im_noisy = torch.randn(1, 3, 64, 64).half().to(device)
+  clean = iterative_denoise_cfg(im_noisy,
+                            i_start=0,
+                            prompt_embeds=prompt_embeds,
+                            uncond_prompt_embeds=prompt_embeds_dict[''].half().to(device),
+                            timesteps=strided_timesteps, scale=7, display=False)
+  images.append(torch.tensor(clean)[0].permute(1, 2, 0) / 2. + 0.5)
+media.show_images(images)
+
     
+    </code> 
+    </pre>
+    <p>Below are the resulting generated images:</p>
+      <div class="images five">
+        <figure>
+          <figcaption>Sample 1</figcaption>
+          <img src="./data/part61.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Sample 2</figcaption>
+          <img src="./data/part62.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Sample 3</figcaption>
+          <img src="./data/part63.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Sample 4</figcaption>
+          <img src="./data/part64.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Sample 5</figcaption>
+          <img src="./data/part65.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+      </div>
+
+    <h2>1.7: Image-to-Image Translation</h2>
+    <p>I used the noise levels [1, 3, 5, 7, 10, 20] to edit the Campanile and two other photots, as seen below</p>
+        <div class="images seven">
+        
+
+        <figure>
+          <figcaption>Original</figcaption>
+          <img src="./data/original_camp.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 1</figcaption>
+          <img src="./data/7.121.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 3</figcaption>
+          <img src="./data/7.122.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 5</figcaption>
+          <img src="./data/7.123.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 7</figcaption>
+          <img src="./data/7.124.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 10</figcaption>
+          <img src="./data/7.125.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 20</figcaption>
+          <img src="./data/7.126.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Original</figcaption>
+          <img src="./data/fireworks.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 1</figcaption>
+          <img src="./data/fireworks1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 3</figcaption>
+          <img src="./data/fireworks2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 5</figcaption>
+          <img src="./data/fireworks3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 7</figcaption>
+          <img src="./data/fireworks4.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 10</figcaption>
+          <img src="./data/fireworks5.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 20</figcaption>
+          <img src="./data/fireworks6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>Original</figcaption>
+          <img src="./data/yos.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 1</figcaption>
+          <img src="./data/yos1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 3</figcaption>
+          <img src="./data/yos2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 5</figcaption>
+          <img src="./data/yos3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 7</figcaption>
+          <img src="./data/yos4.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 10</figcaption>
+          <img src="./data/yos5.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+        <figure>
+          <figcaption>noise = 20</figcaption>
+          <img src="./data/yos6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+        </figure>
+      </div>
+      <h2>1.7.2: Editing Hand-Drawn and Web Images</h2>
+      <p>Next, I used a similar process with an online image, as seen below.</p>
+        <div class="images seven">
+
+          <figure>
+            <figcaption>Original</figcaption>
+            <img src="./data/ogsun.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 1</figcaption>
+            <img src="./data/sun1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 3</figcaption>
+            <img src="./data/sun2.png" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 5</figcaption>
+            <img src="./data/sun3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 7</figcaption>
+            <img src="./data/sun4.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 10</figcaption>
+            <img src="./data/sun5.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 20</figcaption>
+            <img src="./data/sun6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+      <p>I also repeated this for a drawn image.</p>
+
+        <div class="images seven">
+
+          <figure>
+            <figcaption>Original</figcaption>
+            <img src="./data/drawing.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 1</figcaption>
+            <img src="./data/house1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 3</figcaption>
+            <img src="./data/house2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 5</figcaption>
+            <img src="./data/house3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 7</figcaption>
+            <img src="./data/house4.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 10</figcaption>
+            <img src="./data/house5.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>noise = 20</figcaption>
+            <img src="./data/house6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+
+
+
+        
+  </div>
+</body>

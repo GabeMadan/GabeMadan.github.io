@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Project 2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f9fafb;
+      --card: #fff;
+      --text: #333;
+      --text-strong: #222;
+      --muted: #444;
+      --border: #eee;
+      --accent: #4a90e2;
+      --accent-hover: #357ab8;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      color: var(--text-strong);
+      text-align: center;
+    }
+
+    h2 {
+      margin: 40px 0 16px;
+      font-size: 20px;
+      color: var(--text-strong);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .desc {
+      margin: 12px 0 24px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    /* Responsive image grids */
+    .images {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 8px;
+    }
+
+    /* Section-specific grid templates */
+    .images.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .images.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .images.many {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    @media (max-width: 900px) {
+      .images.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .images.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .images.ten { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 20px; }
+      .images.two { grid-template-columns: 1fr; }
+      .images.three { grid-template-columns: 1fr; }
+
+      .images.ten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    figure {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    figure:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+      object-fit: cover;
+    }
+
+    figcaption {
+      width: 100%;
+      padding: 10px 12px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .back {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 10px 18px;
+      text-decoration: none;
+      color: #fff;
+      background: var(--accent);
+      border-radius: 6px;
+    }
+
+    .back:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Section 1 -->
+        <h1>Project 5</h1>
+    <!-- Section 1 -->
+    <h2>Part 0: Setup</h2>
+    <p>Below are 3 images and their respective prompts using the DeepFloyd IF diffusion model, with num_inference_steps of 40 and 100. I used a seed value of 1 for this project. </p>
+    <div class="images three">
+      <figure>
+        <figcaption>A beach with wildlife in australia, p = 40</figcaption>
+        <img src="./data/image2.jpg" alt="A beach with wildlife in australia, p = 40" />
+      </figure>
+      <figure>
+        <figcaption>A snowy mountain with skiers, p = 40</figcaption>
+        <img src="./data/image1.jpg" alt="A snowy mountain with skiers, p = 40" />
+      </figure>
+      <figure>
+        <figcaption>a futuristic city skyline at sunset with skyscrapers, p = 40</figcaption>
+        <img src="./data/image3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+      </figure>
+      <figure>
+        <figcaption>A beach with wildlife in australia, p = 100</figcaption>
+        <img src="./data/image.jpg" alt="A beach with wildlife in australia, p = 40" />
+      </figure>
+      <figure>
+        <figcaption>A snowy mountain with skiers, p = 100</figcaption>
+        <img src="./data/image4.jpg" alt="A snowy mountain with skiers, p = 100" />
+      </figure>
+      <figure>
+        <figcaption>a futuristic city skyline at sunset with skyscrapers, p = 40</figcaption>
+        <img src="./data/image5.jpg" alt="A snowy mountain with skiers, p = 40" />
+      </figure>
+    </div>
+
+    <h2>1.1: Implementing the Forward Process</h1>
+    <p> </p>
+    

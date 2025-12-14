@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Project 2</title>
+  <title>Project 5</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -67,8 +67,29 @@
       gap: 24px;
       margin-bottom: 8px;
     }
+    .images1 {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 8px;
+    }
+    .images1.one figure img {
+      aspect-ratio: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .images1.three figure img {
+      aspect-ratio: auto;
+      height: auto;
+      object-fit: contain;
+    }
 
     /* Section-specific grid templates */
+    .images1.one {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    .images1.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
     .images.two {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -183,7 +204,7 @@
       </figure>
       <figure>
         <figcaption>a futuristic city skyline at sunset with skyscrapers, p = 40</figcaption>
-        <img src="./data/image5.jpg" alt="A snowy mountain with skiers, p = 40" />
+        <img src="./data/image5.jpg" alt="A snowy mountain with skiers, p = 100" />
       </figure>
     </div>
 
@@ -325,16 +346,9 @@
     <p>Below is the code snippets for these images:</p>
     <pre>
       <code>
-      a = alphas_cumprod[t]/alphas_cumprod[prev_t]
-      b = (1 - a)
 
-      x0 = (image - torch.sqrt(1-alphas_cumprod[t].to(image.device)) * noise_est) / torch.sqrt(alphas_cumprod[t].to(image.device))
-      a1 = alphas_cumprod[t].to(image.device)
-      a2 = alphas_cumprod[prev_t].to(image.device)
       img = torch.sqrt(a2) * b / (1 - a1) * x0 + torch.sqrt(a) * (1 - a2) / (1 - a1) * image
       pred_prev_image = add_variance(predicted_variance, t, img)
-
-  return clean
 
       </code>
     </pre> 
@@ -364,17 +378,13 @@
        </div>
 
      <h2>1.6: CFG</h2>
-        <p>Next, I implemented CFG according to the algorithm described in the spec. I did this by running the UNet twice, and then combining the noise amounts. I then added conditional variance to the output, and resulting images were much better quality then the diffusion model sampling images. Below is a code snippet for this section </p>
+        <p>Next, I implemented CFG according to the algorithm described in the spec. I did this by running the UNet twice, and then combining the noise amounts. I then added conditional variance to the output, and resulting images were much better quality then the diffusion model sampling images. Below is a code snippet for this section. </p>
         <pre>
     <code>
 
-      noise_est, predicted_variance = torch.split(model_output, image.shape[1], dim=1)
-      uncond_noise_est, _ = torch.split(uncond_model_output, image.shape[1], dim=1)
 
       cfg = uncond_noise_est + scale * (noise_est - uncond_noise_est)
-
       x0 = (image - torch.sqrt(1-a1) * cfg) / torch.sqrt(a1)
-
       pred_prev_image = add_variance(predicted_variance, t, (torch.sqrt(a2) * b / (1-a1) * x0) + torch.sqrt(a1/a2) * (1-a2)/(1-a1) * image)
 
 
@@ -405,7 +415,7 @@
       </div>
 
     <h2>1.7: Image-to-Image Translation</h2>
-    <p>I used the noise levels [1, 3, 5, 7, 10, 20] to edit the Campanile and two other photots, as seen below</p>
+    <p>I used the noise levels [1, 3, 5, 7, 10, 20] to edit the Campanile and two other photos, as seen below.</p>
         <div class="images seven">
         
 
@@ -630,7 +640,7 @@
           </figure>
          </div>
 
-         <p>I used the code snippet below to generate these images. The main idea is to start from a fully noisy image and for each timestep, blend the 2 noise predictions and then reinsert the original image outside the mask by re-noising it to the current timestep and combining it with the generated area. </p>
+         <p>I used the code snippet below to generate these images. The main idea is to start from a fully noisy image and for each timestep, we do CFG on the image and blend the denoised image with the original noisy image. This way, the images get blended properly rather than having a harsh cutoff. </p>
          <pre>
           <code>
 
@@ -646,6 +656,7 @@
 
         <h2>1.7.3: Text-Conditional Image-to-Image Translation</h2>
         <p>For this section, the process was nearly identical to the previous ones, but I just adjusted the prompt from "a high quality image" to something more specific. Below are the results.</p>
+        <p>"A pencil" + an image of the campanile</p>
         <div class="images seven">
           <figure>
             <figcaption>i = 1</figcaption>
@@ -675,6 +686,10 @@
             <figcaption>Original</figcaption>
             <img src="./data/original_camp.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
           </figure>
+                    </div>
+          <p>"A watch" + an image of the sun</p>
+        <div class="images seven">
+
           <figure>
             <figcaption>i = 1</figcaption>
             <img src="./data/watch1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
@@ -703,6 +718,10 @@
             <figcaption>Original</figcaption>
             <img src="./data/ogsun.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
           </figure>
+          </div>
+          <p>"A flower" + an image of a tiger</p>
+        <div class="images seven">
+
           <figure>
             <figcaption>i = 1</figcaption>
             <img src="./data/flower1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
@@ -771,18 +790,11 @@
         </div>
 
         <h2>1.9: Hybrid Images</h2>
-        <p>To make hybrid images, I combined the low freq noise which was predicted from the first prompt with the high freq from the other prompt at each iteration step. Then, I used that combined noise to guide the denoising process, as done before. Below is a few lines of my code which do this</p>
+        <p>To make hybrid images, I combined the low freq noise which was predicted from the first prompt with the high freq from the other prompt at each iteration step. We can get the low freq component by using a gaussian blur and the high freq component by subtracting the blur from the original image. Then, I used that combined noise to guide the denoising process, as done before. Below is a few lines of my code which do this. </p>
       <pre>
         <code>
 
-      uncond_model_output1 = stage_1.unet(image, t, encoder_hidden_states=uncond_prompt_embeds, return_dict=False)[0]
-      n1, var = torch.split(model_output1, image.shape[1], dim=1)
-      uncondn1, _ = torch.split(uncond_model_output1, image.shape[1], dim=1)
       cfg1 = uncondn1 + scale * (n1 - uncondn1)
-
-      uncond_model_output2 = stage_1.unet(image, t, encoder_hidden_states=uncond_prompt_embeds, return_dict=False)[0]
-      n2, var = torch.split(model_output2, image.shape[1], dim=1)
-      uncondn2, _ = torch.split(uncond_model_output2, image.shape[1], dim=1)
       cfg2 = uncondn2 + scale * (n2 - uncondn2)
 
       low = TF.gaussian_blur(cfg1, 33, 2)
@@ -802,7 +814,133 @@
             <img src="./data/snow.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
           </figure>
         </div>
+
+
+
+      <h2>Part B1.1 Training a Single-Step Denoising UNet</h2>
+      <p>For this part, I first constructed the following UNet Architecture by creating the UNet standard operations and then performing those operations in the sequence defined in the Unconditional UNet below via layering and tensor concatenation. </p>
+
+
+        <div class="images1 one">
+          <figure>
+            <figcaption>Standard UNet Operations</figcaption>
+            <img src="./data/stdops.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>UNet Architecture</figcaption>
+            <img src="./data/uncondunet.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>  
+      <h2>B1.2: Using the UNet to Train a Denoiser</h2>
+      <p>To visualize the noise, I added increasing levels of noise to an MNIST image using noise values 0.0, 0.2, 0.4, 0.6, 0.8, and 1.0, as seen below. </p>
+
+        <div class="images1 one">
+          <figure>
+            <figcaption>Standard UNet Operations</figcaption>
+            <img src="./data/1.2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+
+      <h2>B1.2.1: Training</h2>
+      <p>Next, I trained the UNet defined in part 1.1 to be able to predict a de-noised image from a noisy image. The UNet was trained with an image noise value of 0.5 over 5 epochs. I used Adam as the optimizer with an lr of 1e-4 and a batch size of 256 with MSE loss. To run the model, I created the noisy image using the formula <code>noisy_im = images + sigma * torch.randn_like(images)</code>, and then ran my model on this noisy image. Below is the loss and the results. </p>
+        <div class="images1 one">
+          <figure>
+            <figcaption>UNet Training Loss</figcaption>
+            <img src="./data/loss1.2.1fr.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+
+          <figure>
+            <figcaption>UNet Training Results</figcaption>
+            <img src="./data/1.2.1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+        
+      <h2>B1.2.2: Out-of-Distribution Testing</h2>
+      <p>I then applied the same UNet trained in the previous part to images which had different noise levels than what the model had been trained on. I tested the UNet on noise levels of 0.0, 0.2, 0.4, 0.5, 0.6, 0.8, and 1.0. Overall, the model seems to perform well, even on higher noise levels which it wasn't trained for, as seen below.  </p>
+        <div class="images1 one">
+          <figure>
+            <figcaption>UNet Results</figcaption>
+            <img src="./data/1.2.2frfr.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+      <h2>B1.2.3: Denoising Pure Noise</h2>
+      <p>Next, I tested the UNet on pure, Gaussian noise, meaning there was no underlying image beneath all the noise. As seen below in the results, the output seemed to resemble an average of all the numbers rather than any specific one. Since numbers like 2, 3, 5, 8, and 9 all share similar shape patterns, their outlines are more pronounced in the average. </p>
+        <div class="images1 one">
+          <figure>
+            <figcaption>UNet Results</figcaption>
+            <img src="./data/1.2.3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+              <div class="images1 one">
+          <figure>
+            <figcaption>UNet Results</figcaption>
+            <img src="./data/1.2.3loss.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+      <h2>B2.2: Training the UNet</h2>
+      <p>To train, the UNet takes in a noisy image x<sub>t</sub> and a timestep t and predicts the flow x<sub>1</sub> - x<sub>0</sub>. Additionally, the TimeConditionalFM wrapper implements the training algorithm by building x<sub>t</sub> according to the equation given in the spec, namely <code>x<sub>t</sub> = (1 - t)x<sub>0</sub> + tx<sub>1</sub></code>. The training loop then gives the wrapper images and trains via updating the UNet with Adam. The reason time conditioning works is because it tells the model how far the image is from pure noise vs a real image, and this way it's easier to predict the flow at that point. Near the beginning, the image is mostly noise, so the correct direction might be very different than what it is near the end, when the image has very little noise. Below is the loss during said training loop.</p>
+        <div class="images1 one">
+          <figure>
+            <figcaption>UNet Results</figcaption>
+            <img src="./data/loss2.2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+      <h2>B2.3: Sampling the UNet </h2>
+      <p>To sample, I computed <code>x<sub>t</sub> + 1/T u<sub>&theta;</sub></sub>(x<sub>t</sub>, t)</code> over each iteration, the results of which are shown below (I sampled all digits 4 times -> 40 data points per chart). The sampling accuracy was not the best, but this makes sense because the model was not trained with class conditioning yet.</p>
+        <div class="images1 three">
+          <figure>
+            <figcaption>Epoch 1</figcaption>
+            <img src="./data/2.3.1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Epoch 5</figcaption>
+            <img src="./data/2.3.2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Epoch 10</figcaption>
+            <img src="./data/2.3.3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+     <h2>B2.5: Training the UNet </h2>
+      <p>For class conditioning, the UNet takes in a noisy image, a timestep, and a class label (which is converted to a one hot vector), and it predicts the flow x<sub>1</sub> - x<sub>0</sub>. During the training, the images and labels get passed into the ClassConditionalFM wrapper, which trains via the same linear formula as before, <code>x<sub>t</sub> = (1 - t)x<sub>0</sub> + tx<sub>1</sub></code>. However, this wrapper also conditions the UNet on the class which corresponds to the actual digit. This helps the model accuracy a lot, since it knows specifically which digit to generate. Below is the loss.<p>
+        <div class="images1 one">
+          <figure>
+            <figcaption>Loss for class conditioned model</figcaption>
+            <img src="./data/2.5loss.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+      <h2>B2.6: Sampling the UNet </h2>
+         <p>To sample, the model starts with pure noise and predicts both an unconditional and a class-conditional flow at each time step. Then, it combines the two using the formula <code>combination = uncond + &gamma;(cond - uncond)</code>, with &gamma; = 5.0. The sample is updated each timestep using the formula <code>x<sub>t+1</sub> = x<sub>t</sub> + (1/T) * combination</code>. Repeating this process each time step guides the flow to a digit who's class matches the input, and the model output looked significantly better than before, as seen below.</p>
+        <div class="images1 three">
+          <figure>
+            <figcaption>Epoch 1</figcaption>
+            <img src="./data/2.6.1.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Epoch 5</figcaption>
+            <img src="./data/2.6.2.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Epoch 10</figcaption>
+            <img src="./data/2.6.3.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+        </div>
+
+        <p>To remove the learning rate scheduler, I had to lower the fixed learning rate in the optimizer. The scheduler was used to gradually reduce the learning rate during training, so the average learning rate was smaller. Therefore when removing the scheduler, I had to decrease the optimizer's learning rate to avoid having the learning rate be high for all steps. I tried decreasing it to 1e-4 and it seemed to work well, as seen below.</p>
+        <div class="images1 three">
+          <figure>
+            <figcaption>Epoch 1 (no scheduler)</figcaption>
+            <img src="./data/2.6.4.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Epoch 5 (no scheduler)</figcaption>
+            <img src="./data/2.6.5.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          <figure>
+            <figcaption>Epoch 10 (no scheduler)</figcaption>
+            <img src="./data/2.6.6.jpg" alt="A futuristic city skyline at sunset with skyscrapers, p = 100" />
+          </figure>
+          </div>
   </div>
 </body>
-
 
